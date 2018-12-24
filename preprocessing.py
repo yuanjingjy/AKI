@@ -20,6 +20,7 @@ from sklearn.ensemble import AdaBoostClassifier
 from sklearn.pipeline import make_pipeline
 
 dataset=pd.read_csv('akidata.csv')
+diasbp = pd.read_csv('M:/AKIdata/diasbp.csv')
 del_col =['icustay_id','subject_id','hadm_id','intime','outtime','akistarttime','ethnicity','hospital_expire_flag','av_icustayid']
 data = dataset.drop(del_col,axis=1)#delete irrelevent columns
 
@@ -61,7 +62,7 @@ estimat.fit(x_train,y_train)
 pipe = Pipeline(steps=[('preprocessor',preprocessor),#the final classifier,pipeline
                       ('model',estimat)])
 
-grid = GridSearchCV(estimator=pipe,param_grid=param_grid,cv=10)
+grid = GridSearchCV(estimator=pipe, param_grid = param_grid, cv=10)
 
 grid.fit(x_train,y_train)
 ############################test the final model#################################
