@@ -78,8 +78,12 @@ class preprocessing(object):
 def main():
     # 加载训练集数据
     data = pd.read_csv('trainset.csv')
+
+    #分离特征和标签
     labelmat = data['label']
     datamat = data.drop(['label'], axis=1)
+
+
     pipeline = Pipeline([('preprocess', preprocessing())])
     test = pipeline.transform(datamat)
     return test
