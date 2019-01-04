@@ -4,12 +4,13 @@
 # @File    : preprocessing.py
 # @Time    : 2018/12/14 11:06
 import pandas as pd
-from sklearn.pipeline import Pipeline
+import numpy as np
+from sklearn.pipeline import Pipeline, FeatureUnion
 from sklearn.linear_model import SGDClassifier
 from sklearn.model_selection import RandomizedSearchCV
 from sklearn.model_selection import GridSearchCV
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import OneHotEncoder,StandardScaler,QuantileTransformer
+from sklearn.preprocessing import OneHotEncoder,QuantileTransformer,FunctionTransformer
 from sklearn.impute import SimpleImputer
 from sklearn.compose import ColumnTransformer
 from sklearn.svm import SVC
@@ -18,59 +19,73 @@ from time import time
 from sklearn.neural_network import MLPClassifier
 from sklearn.ensemble import AdaBoostClassifier
 from sklearn.pipeline import make_pipeline
+from sklearn.base import BaseEstimator,TransformerMixin
 
-dataset=pd.read_csv('akidata.csv')
-diasbp = pd.read_csv('M:/AKIdata/diasbp.csv')
-del_col =['icustay_id','subject_id','hadm_id','intime','outtime','akistarttime','ethnicity','hospital_expire_flag','av_icustayid']
-data = dataset.drop(del_col,axis=1)#delete irrelevent columns
+#定义预处理类
+class preprocessing(object):
+    def transform(self,data):
+        # 处理年龄
+        index = data[data['age'] > 200].index
+        data['age'].loc[index] = 91.4
 
-labelmat = data['classlabel']#labelmat
-datamat=data.drop('classlabel',axis=1)#datamat
+        # 去掉建模无关项
+        del_col = ['icustay_id', 'akistarttime', 'ethnicity', 'hospital_expire_flag']
+        data = data.drop(del_col, axis=1)  # delete irrelevent columns
 
-x_train,x_test,y_train,y_test=train_test_split(datamat,labelmat,test_size=0.3,random_state=25)
+        # 添加BMI的标签，插值得到的标签为1，否则为0
+        data['bmi_label'] = 0
+        index_bmi = data[data['height'].isnull() | data['weight'].isnull()].index
+        data['bmi_label'].loc[index_bmi] = 1
 
-keys = list(datamat.keys())#all eigen names
-keys.remove('admission_type')
-keys.remove('gender')#all eigen but admission_type and gender are numeric eigen
+        # # 提取所有的数值型特征的名称
+        # keys = list(data.keys())
+        # for key in ['admission_type', 'gender', 'vaso', 'vent', 'bmi_label']:
+        #     keys.remove(key)
+        #
+        # # 定义对数值型变量和分类型变量的处理方法
+        # numeric_features = keys  # impute the missing value with median for the numeric eigen
+        # numeric_transformer = Pipeline(steps=[
+        #     ('imputer', SimpleImputer(strategy='mean')),
+        #     ('scaler', QuantileTransformer(random_state=0, output_distribution='uniform'))
+        # ])
+        #
+        # categorical_features = ['admission_type', 'gender', 'vaso', 'vent',
+        #                         'bmi_label']  # impute the missing value with 'missing' and Encode them for the categorical eigens
+        # categorical_transformer = Pipeline(steps=[
+        #     ('imputer', SimpleImputer(strategy='constant', fill_value='missing')),
+        #     ('onehot', OneHotEncoder(handle_unknown='ignore'))
+        # ])
+        #
+        # # 预处理模块，ColumnTransformer函数分别处理数值型特征和分类型特征
+        # preprocessor_imp = ColumnTransformer(
+        #     # preprocessing numeric and categorical eigen with different methods respectively
+        #     transformers=[
+        #         ('num', numeric_transformer, numeric_features),
+        #         ('cat', categorical_transformer, categorical_features)
+        #     ]
+        # )
+        #
+        # # preprocessor_imp.fit(data)
+        # data_processed = preprocessor_imp.transform(data)
 
-numeric_features=keys#impute the missing value with median for the numeric eigen
-numeric_transformer = Pipeline(steps=[
-    ('imputer',SimpleImputer(strategy='median')),
-    ('scaler',QuantileTransformer(random_state=0,output_distribution='uniform'))
-])
+        data_processed = data
 
-categorical_features=['admission_type','gender']#impute the missing value with 'missing' and Encode them for the categorical eigens
-categorical_transformer = Pipeline(steps=[
-    ('imputer',SimpleImputer(strategy='constant',fill_value='missing')),
-    ('onehot',OneHotEncoder(handle_unknown='ignore'))
-])
+        return data_processed
 
-preprocessor = ColumnTransformer(#preprocessing numeric and categorical eigen with different methods respectively
-    transformers=[
-        ('num',numeric_transformer,numeric_features),
-        ('cat',categorical_transformer,categorical_features)
-    ]
-)
-param_range = [0.01, 0.1, 1.0]
-param_grid = {'svm__C': param_range,
-               'svm__kernel': ['linear']}
+    def fit(self,X,y=None):
+        return self
 
-n_iter_search = 20
-clf = SVC()
-estimat = make_pipeline(SVC(),SGDClassifier(),MLPClassifier())
-estimat.fit(x_train,y_train)
-pipe = Pipeline(steps=[('preprocessor',preprocessor),#the final classifier,pipeline
-                      ('model',estimat)])
+def main():
+    # 加载训练集数据
+    data = pd.read_csv('trainset.csv')
+    labelmat = data['label']
+    datamat = data.drop(['label'], axis=1)
+    pipeline = Pipeline([('preprocess', preprocessing())])
+    test = pipeline.transform(datamat)
+    return test
 
-grid = GridSearchCV(estimator=pipe, param_grid = param_grid, cv=10)
-
-grid.fit(x_train,y_train)
-############################test the final model#################################
+if __name__ == '__main__':
+    data = main()
+    print(data)
 
 
-clf = grid.best_estimator_
-clf.fit(x_train,y_train)
-score = clf.score(x_test,y_test)
-
-
-print('test')
