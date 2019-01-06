@@ -51,14 +51,14 @@ class preimp(object):
             keys.remove(key)
 
         # 定义对数值型变量和分类型变量的处理方法
-        numeric_features = keys  # impute the missing value with median for the numeric eigen
+        numeric_features = keys
         numeric_transformer = Pipeline(steps=[
             ('imputer', SimpleImputer(strategy='mean')),
             ('scaler', QuantileTransformer(random_state=0, output_distribution='uniform'))
         ])
 
-        categorical_features = ['admission_type', 'gender', 'vaso', 'vent',
-                                'bmi_label']  # impute the missing value with 'missing' and Encode them for the categorical eigens
+        #定义分类型变量的预处理方法
+        categorical_features = ['admission_type', 'gender', 'vaso', 'vent', 'bmi_label']
         categorical_transformer = Pipeline(steps=[
             ('imputer', SimpleImputer(strategy='constant', fill_value='missing')),
             ('onehot', OneHotEncoder(handle_unknown='ignore'))
@@ -66,7 +66,6 @@ class preimp(object):
 
         # 预处理模块，ColumnTransformer函数分别处理数值型特征和分类型特征
         preprocessor_imp = ColumnTransformer(
-            # preprocessing numeric and categorical eigen with different methods respectively
             transformers=[
                 ('num', numeric_transformer, numeric_features),
                 ('cat', categorical_transformer, categorical_features)
@@ -89,6 +88,7 @@ def main():
     labelmat = data['label']
     datamat = data.drop(['label'], axis=1)
 
+    #最终的pipeline
     pipeline = Pipeline([('preprocess', preprocessing()),
                          ('test',preimp())
                         ])
