@@ -25,8 +25,7 @@ from sklearn.base import BaseEstimator,TransformerMixin
 class preprocessing(object):
     def transform(self,data):
         # 处理年龄
-        index = data[data['age'] > 200].index
-        data['age'].loc[index] = 91.4
+        data.loc[data['age'] > 89, 'age'] = 91.4
 
         # 去掉建模无关项
         del_col = ['icustay_id', 'akistarttime', 'ethnicity', 'hospital_expire_flag']
@@ -35,7 +34,8 @@ class preprocessing(object):
         # 添加BMI的标签，插值得到的标签为1，否则为0
         data['bmi_label'] = 0
         index_bmi = data[data['height'].isnull() | data['weight'].isnull()].index
-        data['bmi_label'].loc[index_bmi] = 1
+        data.loc[index_bmi, 'bmi_label'] = 1
+
         data_processed = data
 
         return data_processed
@@ -99,4 +99,3 @@ def main():
 if __name__ == '__main__':
     data = main()
     print(data)
-
