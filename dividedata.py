@@ -7,7 +7,7 @@
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
-data = pd.read_csv('M:\AKIdata\yj_aki_finaleigen.csv')
+data = pd.read_csv('E:\Githubcode\AKI\yj_aki_finaleigen.csv')
 
 # 提取特征和标签
 labelmat = data['classlabel']  # labelmat
