@@ -36,6 +36,13 @@ class preprocessing(object):
         index_bmi = data[data['height'].isnull() | data['weight'].isnull()].index
         data.loc[index_bmi, 'bmi_label'] = 1
 
+        #计算BMI
+        height = data['height']
+        weight = data['weight']
+        bmi = weight / ((height / 100) * (height / 100))
+        data.drop(['height', 'weight'], axis=1, inplace=True)
+        data['BMI'] = bmi
+
         data_processed = data
 
         return data_processed
@@ -150,8 +157,8 @@ if __name__ == '__main__':
             'spo2_75', 'tem_max', 'tem_min', 'tem_avg', 'tem_std', 'tem_mid', 'tem_25',
             'tem_75', 'uo_max', 'uo_min', 'uo_avg', 'uo_std', 'uo_mid', 'uo_25', 'uo_75',
             'uosum', 'gcs_max', 'gcs_min', 'gcs_avg', 'gcs_std', 'gcs_mid', 'gcs_25', 'gcs_75',
-            'height', 'weight', 'age', 'lostime', 'inputsum','type_0','type_1','type_2',
-            'F', 'M', 'vaso_0', 'vaso_1', 'vent_0', 'vent_1', 'bmi_0', 'bmi_1','diu_0', 'diu_1']
+            'age', 'lostime', 'inputsum','type_0','type_1','type_2',
+            'F', 'M', 'vaso_0', 'vaso_1', 'vent_0', 'vent_1', 'bmi_0', 'bmi_1','diu_0', 'diu_1', 'BMI']
     dataframe = pd.DataFrame(data,columns = eigens)
     dataframe['classlabel'] = label
     dataframe.to_csv('visualization/preprocessed_data.csv', index=0)
