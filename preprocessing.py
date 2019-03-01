@@ -128,6 +128,19 @@ class preimp(object):
     def fit(self, X, y=None):
         return self
 
+
+class featureselction(object):
+    def transform(self,data):
+        namedata = pd.read_csv('selected_features.csv')
+        names = namedata.keys()
+        outdataset = data.loc[names]
+        n_features = outdata.shape[1]
+
+        return outdata, n_features
+
+    def fit(self, X, y=None):
+        return self
+
 def main():
     # 加载训练集数据
     data = pd.read_csv('trainset.csv')

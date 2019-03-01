@@ -19,13 +19,13 @@ def GetNewDataByPandas():
     """
     data = pd.read_csv('visualization/preprocessed_data.csv')
     y = data['classlabel']
-    X = data.drop(['classlabel','creat','lostime'],axis=1)
+    X = data.drop(['classlabel','creat','lostime','hr_min','rr_75','mbp_std','spo2_25','F'],axis=1)
     columns = np.array(X.columns)
     return X,y,columns
 
 datamat,labelmat,columns = GetNewDataByPandas()
-
-#
+missing = labelmat.isnull().sum()
+#preprocessed_data
 # from sklearn.naive_bayes import GaussianNB
 # from sklearn.svm import SVC
 # from sklearn.model_selection import learning_curve
@@ -128,30 +128,47 @@ datamat,labelmat,columns = GetNewDataByPandas()
 """
 Validation_curve
 """
-from sklearn.svm import SVC
+from sklearn.ensemble import AdaBoostClassifier
 from sklearn.model_selection import validation_curve
 
-param_range = [0,1,10,100,1000,10000]
+param_range = [0.001,0.01,0.1,1,10,100]
 param_range = np.array(param_range)
+
+#---------for XGBoost
+# other_params={
+#               'learning_rate':0.1,
+#               'n_estimators':200,
+#               'max_depth':6,
+#               'min_child_weight':1,
+#               'gamma':0,
+#               'reg_alpha':10,
+#               'reg_lambda':100
+#                  }
+# train_scores, test_scores = validation_curve(
+#     XGBClassifier(**other_params), datamat, labelmat, param_name="reg_lambda", param_range=param_range,
+#     cv=5, scoring="roc_auc", n_jobs=1)
+#---------------------
+
+
+
+#-------------for AdaBoost
 other_params={
-              'learning_rate':0.1,
-              'n_estimators':200,
-              'max_depth':6,
-              'min_child_weight':1,
-              'gamma':0,
-              'reg_alpha':10,
-              'reg_lambda':100
+              # 'learning_rate':1,
+              'n_estimators':50,
+              'algorithm':'SAMME.R'
                  }
+
 train_scores, test_scores = validation_curve(
-    XGBClassifier(**other_params), datamat, labelmat, param_name="reg_lambda", param_range=param_range,
+    AdaBoostClassifier(**other_params), datamat, labelmat, param_name="learning_rate", param_range=param_range,
     cv=5, scoring="roc_auc", n_jobs=1)
+
 train_scores_mean = np.mean(train_scores, axis=1)
 train_scores_std = np.std(train_scores, axis=1)
 test_scores_mean = np.mean(test_scores, axis=1)
 test_scores_std = np.std(test_scores, axis=1)
 
 plt.title("Validation Curve with XGBoost")
-plt.xlabel("reg_lambda")
+plt.xlabel("learning_rate")
 plt.ylabel("Score")
 plt.ylim(0.0, 1.1)
 lw = 2
@@ -166,6 +183,23 @@ plt.fill_between(param_range, test_scores_mean - test_scores_std,
                  test_scores_mean + test_scores_std, alpha=0.2,
                  color="navy", lw=lw)
 plt.legend(loc="best")
-plt.savefig('C:/Users/Administrator/Desktop/xgboost调参/reg_lambda')
+#plt.savefig('C:/Users/Administrator/Desktop/xgboost调参/reg_lambda')
 plt.show()
+
+
+# """
+# RFECV
+# """
+# from sklearn.feature_selection import RFECV
+#
+# clf_xgb = XGBClassifier(**other_params)
+# rfecv = RFECV(estimator=clf_xgb, step=1, cv=5, scoring='roc_auc')
+# rfecv.fit(datamat,labelmat)
+# support = rfecv.support_
+# rank = rfecv.ranking_
+# scores = rfecv.grid_scores_
+#
+# selected_features = columns[support]
+# selectedfeatures = pd.DataFrame(selected_features)
+# selectedfeatures.to_csv('selected_features.csv', index=0)
 print("test")
