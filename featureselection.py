@@ -54,21 +54,21 @@ datamat.drop(['creat','lostime','hr_min','rr_75','mbp_std','spo2_25','F'],axis=1
 #
 # print("test")
 
-# """
-# 将特征值依次代入，比较AUC结果
-# """
-# from sklearn.model_selection import cross_validate
-# from sklearn.model_selection import StratifiedKFold
-#
-# sortinfo = pd.read_csv('FSsort.csv')
-# sortname = sortinfo.ix[:,0]
-# datasorted = data[sortname]
-# names = datamat.keys()
-# n = np.shape(datamat)[1]
-#
-# meanfit = []#用来存储逐渐增加特征值过程中，不同数目特征值对应的auc平均值
-# stdfit = []#用来存储逐渐增加特征值的过程中，不同数目特征值对应的AUC标准差
-# cv = StratifiedKFold(n_splits=10)
+"""
+将特征值依次代入，比较AUC结果
+"""
+from sklearn.model_selection import cross_validate
+from sklearn.model_selection import StratifiedKFold
+
+sortinfo = pd.read_csv('FSsort.csv')
+sortname = sortinfo.ix[:,0]
+datasorted = data[sortname]
+names = datamat.keys()
+n = np.shape(datamat)[1]
+
+meanfit = []#用来存储逐渐增加特征值过程中，不同数目特征值对应的auc平均值
+stdfit = []#用来存储逐渐增加特征值的过程中，不同数目特征值对应的AUC标准差
+cv = StratifiedKFold(n_splits=10)
 # other_params={
 #               'learning_rate':0.1,
 #               'n_estimators':200,
@@ -78,6 +78,16 @@ datamat.drop(['creat','lostime','hr_min','rr_75','mbp_std','spo2_25','F'],axis=1
 #               'reg_alpha':10,
 #               'reg_lambda':100 }
 # xgbClf = XGBClassifier(**other_params)
+# from sklearn.svm import SVC
+# other_params={
+#               'C':0.1,
+#               'kernel':'linear',
+#               'degree':3,
+#               'tol':0.001,
+#               'class_weight':'balanced',
+#               'max_iter':-1
+#                  }
+# clf_svc = SVC(**other_params)
 #
 # for i in range(n):
 #     print("第%s个参数："%(i+1))
@@ -91,7 +101,7 @@ datamat.drop(['creat','lostime','hr_min','rr_75','mbp_std','spo2_25','F'],axis=1
 #     std_score = []#第i个特征值交叉验证和BER的标准差
 #     k = 0
 #
-#     aue_scores = cross_validate(xgbClf, dataMat, labelmat, scoring='balanced_accuracy',
+#     aue_scores = cross_validate(clf_svc, dataMat, labelmat, scoring='roc_auc',
 #                                 cv=cv, return_train_score=True)
 #     scores = aue_scores['test_score']
 #     mean_score = np.mean(scores)
@@ -102,11 +112,11 @@ datamat.drop(['creat','lostime','hr_min','rr_75','mbp_std','spo2_25','F'],axis=1
 #
 # meanfit = np.array(meanfit)
 # writemean = pd.DataFrame(meanfit)
-# writemean.to_csv('xg_meanfit_ba.csv',encoding='utf-8', index=True)
+# writemean.to_csv('svm_meanfit_auc.csv',encoding='utf-8', index=True)
 #
 # stdfit = np.array(stdfit)
 # writestd = pd.DataFrame(stdfit)
-# writestd.to_csv('xg_stdfit_ba.csv', encoding='utf-8', index=True)
+# writestd.to_csv('svm_stdfit_auc.csv', encoding='utf-8', index=True)
 #
 #
 # fig, ax1 = plt.subplots()
@@ -124,8 +134,8 @@ datamat.drop(['creat','lostime','hr_min','rr_75','mbp_std','spo2_25','F'],axis=1
 
 sortFS = pd.read_csv('FSsort.csv',names=['Features','Relief','Fisher','gini','FinalScore'])#特征值排序结果
 names = sortFS['Features']#排序后特征值名称
-stdresult = pd.read_csv('xg_stdfit_ba.csv',names=['index','std'])
-meanresult = pd.read_csv('xg_meanfit_ba.csv',names=['index','mean'])
+stdresult = pd.read_csv('svm_stdfit_auc.csv',names=['index','std'])
+meanresult = pd.read_csv('svm_meanfit_auc.csv',names=['index','mean'])
 
 #十折交叉验证后后BER的平均值、标准差，FS.py程序运行出来的
 stdvalue=stdresult[1:82]['std']
@@ -162,14 +172,14 @@ ax.fill_between(x,std_up,std_down,color='gray',alpha=0.25)#填充上下标准差
 line_h=ax.hlines(up,1,80,'r',alpha=0.25,linewidth = 2)#画横线BER最小值+对应标准差处的
 ax.plot(minindex,minvalue,color='r',marker='o',markersize = 10)#作marker，在BER最小值位置
 ax.plot(a,tmp,'r^',markersize = 10)#作marker，在最小允许特征子集处
-ax.set_xticks([1,10,20,30,40,50,60,69,70,80,81])#标出需要添加的横坐标
+ax.set_xticks([1,10,20,30,40,50,60,70,71,80,81])#标出需要添加的横坐标
 
 ax.set_xticklabels([1,10,20,30,40,50,60,' ',' ',' ',' '],size=16)
 # ax.set_xticks([10.5, 39], minor=True)
 # ax.set_xticklabels(['10 11', '38 40'], minor=True,size=16)
 
-ax.set_xticks([69.5,80.5], minor=True)
-ax.set_xticklabels(['69 70','80 81'], minor=True,size=16)
+ax.set_xticks([70.5,80.5], minor=True)
+ax.set_xticklabels(['70 71','80 81'], minor=True,size=16)
 
 for line in ax.xaxis.get_minorticklines():
     line.set_visible(False)
@@ -186,4 +196,3 @@ plt.show()
 
 
 print('test')
-

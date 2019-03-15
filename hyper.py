@@ -130,8 +130,9 @@ Validation_curve
 """
 from sklearn.ensemble import AdaBoostClassifier
 from sklearn.model_selection import validation_curve
+from sklearn.svm import SVC
 
-param_range = [0.001,0.01,0.1,1,10,100]
+param_range = [-1,1,10,100,1000,10000]
 param_range = np.array(param_range)
 
 #---------for XGBoost
@@ -153,53 +154,56 @@ param_range = np.array(param_range)
 
 #-------------for AdaBoost
 other_params={
-              # 'learning_rate':1,
-              'n_estimators':50,
-              'algorithm':'SAMME.R'
+              'C':0.1,
+              'kernel':'linear',
+              'tol':0.001,
+              'class_weight':'balanced',
+              'max_iter':-1
                  }
 
-train_scores, test_scores = validation_curve(
-    AdaBoostClassifier(**other_params), datamat, labelmat, param_name="learning_rate", param_range=param_range,
-    cv=5, scoring="roc_auc", n_jobs=1)
-
-train_scores_mean = np.mean(train_scores, axis=1)
-train_scores_std = np.std(train_scores, axis=1)
-test_scores_mean = np.mean(test_scores, axis=1)
-test_scores_std = np.std(test_scores, axis=1)
-
-plt.title("Validation Curve with XGBoost")
-plt.xlabel("learning_rate")
-plt.ylabel("Score")
-plt.ylim(0.0, 1.1)
-lw = 2
-plt.semilogx(param_range, train_scores_mean, label="Training score",
-             color="darkorange", lw=lw)
-plt.fill_between(param_range, train_scores_mean - train_scores_std,
-                 train_scores_mean + train_scores_std, alpha=0.2,
-                 color="darkorange", lw=lw)
-plt.semilogx(param_range, test_scores_mean, label="Cross-validation score",
-             color="navy", lw=lw)
-plt.fill_between(param_range, test_scores_mean - test_scores_std,
-                 test_scores_mean + test_scores_std, alpha=0.2,
-                 color="navy", lw=lw)
-plt.legend(loc="best")
-#plt.savefig('C:/Users/Administrator/Desktop/xgboost调参/reg_lambda')
-plt.show()
-
-
-# """
-# RFECV
-# """
-# from sklearn.feature_selection import RFECV
+# train_scores, test_scores = validation_curve(
+#     SVC(**other_params), datamat, labelmat, param_name="max_iter", param_range=param_range,
+#     cv=5, scoring="roc_auc", n_jobs=1)
 #
-# clf_xgb = XGBClassifier(**other_params)
-# rfecv = RFECV(estimator=clf_xgb, step=1, cv=5, scoring='roc_auc')
-# rfecv.fit(datamat,labelmat)
-# support = rfecv.support_
-# rank = rfecv.ranking_
-# scores = rfecv.grid_scores_
+# train_scores_mean = np.mean(train_scores, axis=1)
+# train_scores_std = np.std(train_scores, axis=1)
+# test_scores_mean = np.mean(test_scores, axis=1)
+# test_scores_std = np.std(test_scores, axis=1)
 #
-# selected_features = columns[support]
-# selectedfeatures = pd.DataFrame(selected_features)
-# selectedfeatures.to_csv('selected_features.csv', index=0)
+# plt.title("Validation Curve for SVC")
+# plt.xlabel("max_iter")
+# plt.ylabel("AUC")
+# plt.ylim(0.0, 1.1)
+# lw = 2
+# plt.semilogx(param_range, train_scores_mean, label="Training score",
+#              color="darkorange", lw=lw)
+# plt.fill_between(param_range, train_scores_mean - train_scores_std,
+#                  train_scores_mean + train_scores_std, alpha=0.2,
+#                  color="darkorange", lw=lw)
+# plt.semilogx(param_range, test_scores_mean, label="Cross-validation score",
+#              color="navy", lw=lw)
+# plt.fill_between(param_range, test_scores_mean - test_scores_std,
+#                  test_scores_mean + test_scores_std, alpha=0.2,
+#                  color="navy", lw=lw)
+# plt.legend(loc="best")
+# #plt.savefig('C:/Users/Administrator/Desktop/xgboost调参/reg_lambda')
+# plt.show()
+
+
+"""
+RFECV
+"""
+from sklearn.feature_selection import RFECV
+
+clf_xgb = XGBClassifier(**other_params)
+clf_svc = SVC(**other_params)
+rfecv = RFECV(estimator=clf_svc, step=1, cv=5, scoring='roc_auc')
+rfecv.fit(datamat,labelmat)
+support = rfecv.support_
+rank = rfecv.ranking_
+scores = rfecv.grid_scores_
+
+selected_features = columns[support]
+selectedfeatures = pd.DataFrame(selected_features)
+selectedfeatures.to_csv('selected_features_svc.csv', index=0)
 print("test")
