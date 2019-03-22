@@ -1,6 +1,4 @@
-set search_path to eicu
-
--- create materialized view yj_akidefination_eicu as
+create materialized view yj_akidefination_eicu as
   WITH pid AS (
       SELECT yj_aki_exclusion_eicu.patientunitstayid
       FROM eicu.yj_aki_exclusion_eicu
@@ -10,11 +8,10 @@ set search_path to eicu
              (yj_aki_exclusion_eicu.exclu_admittime = 0))
   ), cre_all AS (
       SELECT DISTINCT pid.patientunitstayid, pl.chartoffset, pl.creatinine
-      FROM pid
-          LEFT JOIN eicu.pivoted_lab pl ON pid.patientunitstayid = pl.patientunitstayid  AND
-                                             pl.chartoffset >= '-6' :: integer * 60 AND
-                                              pl.chartoffset <= ((7 * 24) * 60)
-      and pl.creatinine IS NOT NULL
+      FROM (pid
+          LEFT JOIN eicu.pivoted_lab pl ON ((
+        (pid.patientunitstayid = pl.patientunitstayid) AND (pl.chartoffset >= ('-6' :: integer * 60)) AND
+        (pl.chartoffset <= ((7 * 24) * 60)) AND (pl.creatinine IS NOT NULL))))
   ), cre_base_tmp AS (
       SELECT ca.patientunitstayid,
              ca.chartoffset,
@@ -53,7 +50,7 @@ set search_path to eicu
              CASE
                WHEN ((cd.rv < 1.5) AND (cd.crediff >= 0.3) AND (cd.chartoffset < (48 * 60))) THEN 1
                WHEN ((cd.rv < 1.5) AND (cd.crediff < 0.3)) THEN 0
-               WHEN ((cd.crediff >= 1.5) AND (cd.creatinine >= (4) :: numeric)) THEN 3
+               WHEN ((cd.rv >= 1.5) AND (cd.creatinine >= (4) :: numeric)) THEN 3
                WHEN ((cd.creatinine < (4) :: numeric) AND (cd.rv >= (3) :: numeric)) THEN 3
                WHEN ((cd.creatinine < (4) :: numeric) AND (cd.rv >= (2) :: numeric) AND (cd.rv < (3) :: numeric)) THEN 2
                WHEN ((cd.creatinine < (4) :: numeric) AND (cd.rv >= 1.5) AND (cd.rv < (2) :: numeric)) THEN 1
@@ -119,6 +116,6 @@ set search_path to eicu
                   akiorder.akiorder
   FROM akiorder;
 
-
-
+alter materialized view yj_akidefination_eicu
+  owner to postgres;
 

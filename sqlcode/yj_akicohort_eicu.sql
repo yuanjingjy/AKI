@@ -1,5 +1,4 @@
 set search_path to eicu
-
 create materialized view yj_akicohort_eICU as
 with aki_all as
 (
@@ -8,6 +7,7 @@ with aki_all as
   ,rank() over (partition by patientunitstayid order by chartoffset) as icuakinum1
   from yj_akidefination_eicu yae
   where yae.akistage <> 0
+      and patientunitstayid != 2693435
 )
 ,aki_cohort as
 (
@@ -16,6 +16,7 @@ with aki_all as
   ,rank() over (partition by patientunitstayid order by chartoffset) as icuakinum
   from yj_akidefination_eicu yae2
   where yae2.akistage<>0
+     and patientunitstayid != 2693435
 )
 ,nonaki_cohort as
 (
@@ -25,6 +26,7 @@ with aki_all as
   from yj_akidefination_eicu yae3
   where (not (yae3.patientunitstayid in (select aki_all.patientunitstayid from aki_all)))
   and yae3.cre_order=1
+     and patientunitstayid != 2693435
 ),tmp as
 (
   select distinct aki_cohort.*
@@ -47,4 +49,3 @@ tmp.patientunitstayid
 ,rv
 ,case when akistage = 0 then 0 else 1 end as classlabel
 from tmp
-
