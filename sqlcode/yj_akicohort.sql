@@ -1,4 +1,4 @@
-create materialized view yj_akicohort as
+create materialized view yj_akicohort_xiugaiban as
   WITH includeid AS (
       SELECT yae.icustay_id,
              yae.subject_id,
@@ -14,7 +14,7 @@ create materialized view yj_akicohort as
              yad.cre_order,
              yad.aki_stage_order
       FROM (mimiciii.yj_aki_exclusion yae
-          LEFT JOIN mimiciii.yj_akidefination yad ON ((yae.icustay_id = yad.icustay_id)))
+          LEFT JOIN mimiciii.yj_akidefination_xiugaiban yad ON ((yae.icustay_id = yad.icustay_id)))
       WHERE ((yae.ex_age = 0) AND (yae.ex_los = 0) AND (yae.ex_hos = 0) AND (yae.ex_icufirst = 0) AND
              (yae.ex_crenum = 0) AND (yae.ex_crevalue = 0))
   ), aki_all AS (
@@ -104,6 +104,6 @@ create materialized view yj_akicohort as
   FROM nonaki_cohort
   WHERE (nonaki_cohort.icuakinum = 1);
 
-alter materialized view yj_akicohort
+alter materialized view yj_akicohort_xiugaiban
   owner to postgres;
 

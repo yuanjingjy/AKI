@@ -1,4 +1,4 @@
-create materialized view yj_akidefination as
+create materialized view yj_akidefination_xiugaiban as
   WITH cre_all AS (
       SELECT ie.icustay_id, ie.subject_id, ie.hadm_id, ie.intime, ie.outtime, le.charttime, le.valuenum AS creat
       FROM (mimiciii.icustays ie
@@ -54,7 +54,7 @@ create materialized view yj_akidefination as
                      (cd.charttime > cd.lowcreat48hrtime) AND
                      (cd.charttime < (cd.intime + '48:00:00' :: interval hour))) THEN 1
                WHEN ((cd.rv < (1.5) :: double precision) AND (cd.crediff < (0.3) :: double precision)) THEN 0
-               WHEN ((cd.crediff >= (1.5) :: double precision) AND (cd.creat >= (4) :: double precision)) THEN 3
+               WHEN ((cd.rv >= (1.5) :: double precision) AND (cd.creat >= (4) :: double precision)) THEN 3
                WHEN ((cd.creat < (4) :: double precision) AND (cd.rv >= (3) :: double precision)) THEN 3
                WHEN ((cd.creat < (4) :: double precision) AND (cd.rv >= (2) :: double precision) AND
                      (cd.rv < (3) :: double precision)) THEN 2
@@ -145,6 +145,6 @@ create materialized view yj_akidefination as
          akiorder.akiorder
   FROM akiorder;
 
-alter materialized view yj_akidefination
+alter materialized view yj_akidefination_xiugaiban
   owner to postgres;
 
